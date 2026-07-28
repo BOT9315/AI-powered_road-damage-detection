@@ -166,7 +166,3 @@ with tab_batch:
 st.markdown("---")
 st.caption("Built with YOLOv8 (Ultralytics) + Streamlit · See README.md for training your own model.")
 
-
-#cd "C:\Users\akrk0\Downloads\road-damage-detection (1)\road-damage-detection"
-#venv\Scripts\Activate.ps1
-#streamlit run app/app.py
