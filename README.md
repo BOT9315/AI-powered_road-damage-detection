@@ -1,5 +1,10 @@
 # 🛣️ AI-Powered Road Damage Detection Using Computer Vision
 
+![Python](https://img.shields.io/badge/Python-3.9%2B-blue)
+![YOLOv8](https://img.shields.io/badge/Model-YOLOv8-green)
+![Streamlit](https://img.shields.io/badge/App-Streamlit-red)
+![License](https://img.shields.io/badge/License-Educational-lightgrey)
+
 An end-to-end computer vision system that detects and classifies road
 surface damage — potholes, cracks, and faded lane markings — from
 images and video, estimates severity, and presents results through an
@@ -8,7 +13,28 @@ object detection.
 
 ---
 
-## 1. Problem Statement
+## 📌 Table of Contents
+
+- [Problem Statement](#-problem-statement)
+- [Objectives](#-objectives)
+- [Damage Taxonomy](#-damage-taxonomy)
+- [Project Structure](#-project-structure)
+- [System Architecture](#-system-architecture)
+- [Installation](#-installation)
+- [Dataset Setup](#-dataset-setup)
+- [Training](#-training)
+- [Evaluation](#-evaluation)
+- [Inference (CLI)](#-running-inference-cli)
+- [Web App Demo](#-web-app-demo)
+- [Severity Estimation Logic](#-severity-estimation-logic)
+- [Model Export](#-model-export-deployment)
+- [Limitations & Future Work](#-limitations--future-work)
+- [Testing](#-testing)
+- [License & Attribution](#-license--attribution)
+
+---
+
+## 🎯 Problem Statement
 
 Manual road inspection is slow, expensive, and inconsistent across
 inspectors. This project automates the process: a camera-equipped
@@ -17,7 +43,7 @@ system automatically detects damage, classifies its type, and scores
 its severity — producing a prioritized maintenance report for city or
 highway authorities.
 
-## 2. Objectives
+## 🎯 Objectives
 
 - Detect and localize road damage in images/video using bounding boxes
 - Classify damage into standard categories (cracks, potholes, faded markings)
@@ -25,7 +51,7 @@ highway authorities.
 - Provide a usable demo interface (web app) for non-technical stakeholders
 - Provide a reproducible training/evaluation pipeline for improving the model over time
 
-## 3. Damage Taxonomy
+## 🏷️ Damage Taxonomy
 
 This project follows the standard taxonomy from the RDD2022 (Road
 Damage Dataset) / CRDDC benchmark:
@@ -41,7 +67,7 @@ Damage Dataset) / CRDDC benchmark:
 
 ---
 
-## 4. Project Structure
+## 📁 Project Structure
 
 ```
 road-damage-detection/
@@ -49,20 +75,20 @@ road-damage-detection/
 ├── requirements.txt           # Python dependencies
 ├── config.yaml                # Central configuration (paths, hyperparameters)
 ├── check_setup.py             # Verifies environment before running anything
+├── .gitignore                 # Excludes venv, datasets, weights from Git
 │
 ├── data/
 │   ├── raw/                   # Place downloaded raw images + annotations here
 │   ├── processed/             # Auto-generated YOLO-format train/val/test split
-│   ├── annotations/           # Intermediate annotation working directory
 │   ├── road_damage.yaml       # YOLO dataset descriptor (classes, paths)
 │   └── download_dataset.py    # Instructions + validation for dataset setup
 │
 ├── src/
-│   ├── dataset.py             # VOC/COCO -> YOLO format conversion + train/val/test split
-│   ├── model.py                # YOLOv8 wrapper (train/predict/export/parse results)
+│   ├── dataset.py             # VOC/COCO -> YOLO format conversion + split
+│   ├── model.py                # YOLOv8 wrapper (train/predict/export/parse)
 │   ├── train.py                # Training entry point
 │   ├── inference.py           # Run detection on image / folder / video (CLI)
-│   ├── evaluate.py            # Compute precision/recall/mAP on a held-out set
+│   ├── evaluate.py            # Compute precision/recall/mAP
 │   └── utils.py                # Severity scoring, drawing, reporting helpers
 │
 ├── app/
@@ -77,7 +103,7 @@ road-damage-detection/
 
 ---
 
-## 5. System Architecture
+## 🏗️ System Architecture
 
 ```
  ┌────────────┐    ┌──────────────┐    ┌───────────────┐    ┌─────────────────┐
@@ -103,17 +129,21 @@ export for deployment.
 
 ---
 
-## 6. Installation
+## ⚙️ Installation
 
 ```bash
-# 1. Clone / unzip the project, then create a virtual environment
-python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
+# 1. Clone the repo
+git clone https://github.com/BOT9315/road-damage-detection.git
+cd road-damage-detection
 
-# 2. Install dependencies
+# 2. Create a virtual environment
+python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\Activate.ps1
+
+# 3. Install dependencies
 pip install -r requirements.txt
 
-# 3. Verify everything is installed correctly
+# 4. Verify everything is installed correctly
 python check_setup.py
 ```
 
@@ -123,7 +153,7 @@ training (CPU works for inference at reduced speed). Set
 
 ---
 
-## 7. Dataset Setup
+## 📊 Dataset Setup
 
 1. Download a road damage dataset. Recommended: **RDD2022**
    (https://github.com/sekilab/RoadDamageDetector) — ~47K labeled
@@ -154,9 +184,11 @@ data/processed/
 └── labels/{train,val,test}/
 ```
 
+> **Note:** Raw datasets are NOT included in this repo (see `.gitignore`) due to size. You must download them separately.
+
 ---
 
-## 8. Training
+## 🏋️ Training
 
 ```bash
 python src/train.py --config config.yaml
@@ -170,11 +202,11 @@ Key hyperparameters (edit in `config.yaml` under `train:`):
 | batch_size    | 16      | Reduce if you hit GPU OOM                 |
 | img_size      | 640     | Larger sizes help detect small cracks     |
 | optimizer     | SGD     | AdamW also works well for smaller datasets|
-| mosaic/mixup  | on      | Strong augmentation, important since road damage datasets are often imbalanced (many more cracks than potholes) |
+| mosaic/mixup  | on      | Strong augmentation for class imbalance   |
 
-Override any value from the CLI, e.g.:
+Override any value from the CLI:
 ```bash
-python src/train.py --epochs 50 --batch 8 --img-size 512
+python src/train.py --epochs 50 --batch 8 --img-size 416
 ```
 
 Training outputs (loss curves, PR curves, confusion matrix, weights)
@@ -183,7 +215,7 @@ automatically copied to `models/best.pt`.
 
 ---
 
-## 9. Evaluation
+## 📈 Evaluation
 
 ```bash
 python src/evaluate.py --weights models/best.pt --data data/road_damage.yaml
@@ -195,17 +227,17 @@ per-class mAP bar chart.
 
 ---
 
-## 10. Running Inference (CLI)
+## 🔍 Running Inference (CLI)
 
 ```bash
 # Single image
-python src/inference.py --source path/to/image.jpg --weights models/best.pt
+python -m src.inference --source path/to/image.jpg --weights models/best.pt
 
 # Folder of images
-python src/inference.py --source path/to/folder --weights models/best.pt
+python -m src.inference --source path/to/folder --weights models/best.pt
 
 # Video
-python src/inference.py --source path/to/video.mp4 --weights models/best.pt --video
+python -m src.inference --source path/to/video.mp4 --weights models/best.pt --video
 ```
 
 Annotated outputs and a JSON summary report are written to
@@ -213,40 +245,37 @@ Annotated outputs and a JSON summary report are written to
 
 ---
 
-## 11. Web App Demo
+## 🌐 Web App Demo
 
 ```bash
 streamlit run app/app.py
 ```
 
 Features:
-- **Single Image tab** — upload a photo, view side-by-side original vs.
-  annotated result, per-detection table with confidence and severity
+- **Single Image tab** — upload a photo, view side-by-side original vs. annotated result, per-detection table
 - **Video tab** — upload a clip, get a fully annotated output video
 - **Batch tab** — upload multiple images at once for a summary table
-  (useful for quickly triaging a folder of inspection photos)
 - Adjustable confidence / IoU thresholds in the sidebar
 
 ---
 
-## 12. Severity Estimation Logic
+## ⚠️ Severity Estimation Logic
 
 Since raw bounding boxes alone don't convey urgency, `src/utils.py`
 combines **damage type** and **relative size** (bounding box area as a
 fraction of the image) into a severity score:
 
-- Potholes and alligator cracks are weighted higher (more hazardous to
-  vehicles) than faded lane markings.
-- The weighted area-ratio score is bucketed into `Low / Medium / High
-  / Critical`.
+- Potholes and alligator cracks are weighted higher (more hazardous)
+  than faded lane markings.
+- The weighted area-ratio score is bucketed into `Low / Medium / High / Critical`.
 
 This is a heuristic, not a physical measurement — for production use,
 it should be calibrated against known road conditions or combined with
-depth/LiDAR data if available. See Section 14 for ideas.
+depth/LiDAR data.
 
 ---
 
-## 13. Model Export (Deployment)
+## 📦 Model Export (Deployment)
 
 ```python
 from src.model import RoadDamageModel
@@ -259,38 +288,27 @@ serving via ONNX Runtime without a full PyTorch dependency.
 
 ---
 
-## 14. Limitations & Future Work
+## 🚧 Limitations & Future Work
 
-- **Severity scoring is heuristic**, not physically calibrated (e.g.
-  actual pothole depth). Future work: fuse with stereo depth or LiDAR.
-- **Class imbalance**: potholes are typically rarer than cracks in most
-  datasets — consider focal loss or targeted oversampling if mAP for
-  rare classes lags.
-- **Weather/lighting robustness**: augmentation helps, but a
-  production system should be validated across rain, glare, and
-  night-time conditions.
-- **Geo-tagging**: for real deployments, pair detections with GPS
-  metadata (from dashcam EXIF or a separate GPS log) to plot damage on
-  a map for maintenance crews — not included here, but `outputs/`
-  reports are structured to make that extension straightforward.
-- **Tracking across video frames**: current video inference detects
-  per-frame; adding a tracker (e.g. ByteTrack) would avoid
-  double-counting the same pothole across frames.
+- **Severity scoring is heuristic**, not physically calibrated. Future work: fuse with stereo depth or LiDAR.
+- **Class imbalance**: potholes are typically rarer than cracks — consider focal loss or targeted oversampling.
+- **Weather/lighting robustness**: should be validated across rain, glare, and night-time conditions.
+- **Geo-tagging**: pair detections with GPS metadata to plot damage on a map for maintenance crews.
+- **Tracking across video frames**: adding a tracker (e.g. ByteTrack) would avoid double-counting the same damage across frames.
 
 ---
 
-## 15. Testing
+## 🧪 Testing
 
 ```bash
 pytest tests/
 ```
 
-Covers severity-scoring logic and detection-summary aggregation
-(pure-Python functions that don't require a trained model or GPU).
+Covers severity-scoring logic and detection-summary aggregation.
 
 ---
 
-## 16. License & Attribution
+## 📄 License & Attribution
 
 This project scaffold is provided for educational/research use. If
 using the RDD2022 dataset, cite:
@@ -300,3 +318,10 @@ using the RDD2022 dataset, cite:
 
 YOLOv8 is provided by Ultralytics under AGPL-3.0 / commercial license
 — review their licensing terms before commercial deployment.
+
+---
+
+## 🙋 Contributing
+
+Issues and pull requests are welcome. For major changes, please open
+an issue first to discuss what you'd like to change.
