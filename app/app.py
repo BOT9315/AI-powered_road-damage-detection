@@ -2,11 +2,7 @@
 app.py
 ======
 Streamlit demo application for AI-Powered Road Damage Detection.
-
-Run with:
-    streamlit run app/app.py
 """
-
 import sys
 import tempfile
 from pathlib import Path
