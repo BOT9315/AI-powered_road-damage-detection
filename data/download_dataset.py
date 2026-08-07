@@ -62,9 +62,6 @@ def check_layout(raw_dir="data/raw"):
         print("\nSee the docstring at the top of this file for download instructions.")
     return ok
 
-
-
-
 if __name__ == "__main__":
     check_layout()
     sys.exit(0)
