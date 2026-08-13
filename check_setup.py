@@ -10,7 +10,6 @@ Usage:
 
 import importlib
 import sys
-
 REQUIRED = [
     "ultralytics", "torch", "cv2", "numpy", "yaml",
     "pandas", "sklearn", "matplotlib", "streamlit", "tqdm",
