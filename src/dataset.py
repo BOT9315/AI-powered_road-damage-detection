@@ -8,6 +8,7 @@ Supports two common input annotation formats:
   1. Pascal VOC XML  (RDD2022 default format)
   2. COCO JSON
 
+  
 Usage
 -----
     python src/dataset.py --format voc \
