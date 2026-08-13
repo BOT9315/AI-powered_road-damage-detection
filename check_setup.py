@@ -7,7 +7,6 @@ environment is correctly configured before training or running the app.
 Usage:
     python check_setup.py
 """
-
 import importlib
 import sys
 REQUIRED = [
